@@ -17,13 +17,14 @@ from django.views.generic.edit import CreateView, DeleteView, UpdateView
 from django.views.generic.list import ListView
 
 from .forms import (
+    CommentForm,
     ConfirmForm,
     PostForm,
     ProfileEditForm,
     SearchForm,
     SignUpForm,
 )
-from .models import Post
+from .models import Comment, Post  # Comment を追加
 
 User = get_user_model()
 
@@ -273,3 +274,14 @@ class PostLikeAPIView(LoginRequiredMixin, View):
         except Post.DoesNotExist:
             result = "DoesNotExist"
         return JsonResponse({"result": result})
+
+
+class CommentView(LoginRequiredMixin, CreateView):
+    model = Comment
+    form_class = CommentForm
+    success_url = reverse_lazy("home")
+
+    def get_form_kwargs(self):
+        post = get_object_or_404(Post, pk=self.kwargs["post_pk"])
+        self.object = self.model(user=self.request.user, post=post)
+        return super().get_form_kwargs()
